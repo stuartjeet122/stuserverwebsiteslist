@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "websites": [
+    {
+      "id": "stuserver-home",
+      "type": "website",
+      "name": "Stuserver",
+      "description": "A personal home for projects, experiments and useful tools.",
+      "category": "Personal",
+      "tags": ["Home", "Projects"],
+      "url": "https://stuserver.online/",
+      "preview_image": "/previews/placeholder.svg",
+      "icon": "/icons/favicon.svg",
+      "featured": true,
+      "visible": true,
+      "status": "running",
+      "order": 1
+    }
+  ],
+  "apis": []
+}

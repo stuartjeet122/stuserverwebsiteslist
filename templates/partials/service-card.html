@@ -1,0 +1,40 @@
+{{define "service-card"}}
+<article class="service-card {{if eq .Type "api"}}api-card{{end}}" data-service-card data-type="{{.Type}}" data-category="{{.Category}}" data-featured="{{.Featured}}" data-search="{{.Name}} {{.Description}} {{.Category}} {{range .Tags}}{{.}} {{end}}" {{if and (eq .Type "website") .URL}}data-open-url="{{.URL}}"{{end}}>
+  {{if eq .Type "website"}}
+  <div class="preview-wrap">
+    {{if and .PreviewImage .URL}}<a class="preview-link" href="{{.URL}}" target="_blank" rel="noopener noreferrer" aria-label="Open {{.Name}} website">{{else}}<div class="preview-link preview-placeholder" aria-hidden="true">{{end}}
+      {{if .PreviewImage}}<img class="preview-image" src="{{assetPath .PreviewImage}}" alt="{{.Name}} website preview" loading="lazy" decoding="async" width="640" height="360">{{else}}<div class="placeholder-art"><span></span><span></span><span></span></div>{{end}}
+      <span class="preview-overlay"><span>Visit website <b aria-hidden="true">↗</b></span></span>
+    {{if and .PreviewImage .URL}}</a>{{else}}</div>{{end}}
+    {{if and .PreviewImage .URL}}<button class="preview-modal-trigger" type="button" aria-label="Enlarge {{.Name}} preview">⤢</button>{{end}}
+  </div>
+  {{end}}
+  <div class="card-content">
+    <div class="card-title-row">
+      {{if .Icon}}<img class="service-icon" src="{{assetPath .Icon}}" alt="" loading="lazy" width="38" height="38">{{else}}<span class="service-icon icon-fallback" aria-hidden="true">{{if eq .Type "api"}}{ }{{else}}<span class="mini-mark">S</span>{{end}}</span>{{end}}
+      <div class="card-title-copy"><div class="card-name-row"><h3>{{.Name}}</h3>{{if .Featured}}<span class="featured-badge"><span aria-hidden="true">★</span> Featured</span>{{end}}</div><span class="type-label">{{if eq .Type "api"}}API SERVICE{{else}}WEBSITE{{end}}</span></div>
+      {{if .Status}}<span class="status-badge"><i aria-hidden="true"></i>{{.Status}}</span>{{end}}
+    </div>
+    {{if .Description}}<p class="card-description">{{.Description}}</p>{{else}}<p class="card-description muted">No description provided.</p>{{end}}
+    <div class="card-meta">
+      {{if .Category}}<span class="meta-category">{{.Category}}</span>{{end}}
+      {{if and (eq .Type "api") .Version}}<span class="version-label">v{{.Version}}</span>{{end}}
+      {{range .Tags}}<span class="tag">{{.}}</span>{{end}}
+    </div>
+    {{if eq .Type "api"}}
+    <div class="api-base">
+      <span class="base-label">BASE URL</span>
+      {{if .BaseURL}}<code class="base-url">{{.BaseURL}}</code><button class="copy-button" type="button" data-copy="{{.BaseURL}}" aria-label="Copy API base URL" title="Copy base URL"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"></path></svg></button>{{else}}<span class="unavailable">Unavailable</span>{{end}}
+    </div>
+    <div class="card-actions">
+      {{if .SwaggerURL}}<a class="button button-primary" href="{{safeURL .SwaggerURL}}" target="_blank" rel="noopener noreferrer">API Documentation <span aria-hidden="true">↗</span></a>{{else}}<span class="button button-disabled" aria-disabled="true">Documentation unavailable</span>{{end}}
+      {{if .OpenAPIURL}}<a class="openapi-link" href="{{safeURL .OpenAPIURL}}" target="_blank" rel="noopener noreferrer">OpenAPI spec <span aria-hidden="true">↗</span></a>{{end}}
+    </div>
+    {{else}}
+    <div class="website-url-row">
+      {{if .URL}}<a class="website-url" href="{{.URL}}" target="_blank" rel="noopener noreferrer">{{.URL}}</a><a class="open-link" href="{{.URL}}" target="_blank" rel="noopener noreferrer" aria-label="Open {{.Name}} website">↗</a>{{else}}<span class="unavailable">Website URL unavailable</span>{{end}}
+    </div>
+    {{end}}
+  </div>
+</article>
+{{end}}

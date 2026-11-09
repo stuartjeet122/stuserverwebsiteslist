@@ -1,0 +1,22 @@
+{{define "layout.html"}}
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Discover websites, applications and APIs hosted on the Stuserver personal server.">
+  <title>Stuserver — Personal server directory</title>
+  <link rel="icon" href="/static/icons/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/app.js" defer></script>
+</head>
+<body>
+  {{template "header" .}}
+  <main id="main-content">
+    {{template "content" .}}
+  </main>
+  {{template "footer" .}}
+</body>
+</html>
+{{end}}
