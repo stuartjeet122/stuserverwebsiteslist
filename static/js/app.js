@@ -1,95 +1,57 @@
 (() => {
   "use strict";
 
-  const root = document.documentElement;
-  root.classList.remove("no-js");
-  root.classList.add("js");
-
-  const themeToggle = document.querySelector(".theme-toggle");
-  let storedTheme = null;
-  try {
-    storedTheme = localStorage.getItem("stuserver-theme");
-  } catch {
-    // Theme persistence can be unavailable in private browsing contexts.
-  }
-  const systemPrefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
-  const initialTheme = storedTheme === "light" || storedTheme === "dark"
-    ? storedTheme
-    : (systemPrefersLight ? "light" : "dark");
-  root.dataset.theme = initialTheme;
-
-  function updateThemeButton() {
-    themeToggle?.setAttribute("aria-label", root.dataset.theme === "dark" ? "Switch to light theme" : "Switch to dark theme");
-  }
-  updateThemeButton();
-  themeToggle?.addEventListener("click", () => {
-    root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
-    try {
-      localStorage.setItem("stuserver-theme", root.dataset.theme);
-    } catch {
-      // The selected theme still applies for this page view.
-    }
-    updateThemeButton();
-  });
-
-  const menuToggle = document.querySelector(".mobile-menu-toggle");
-  const navigation = document.querySelector("#primary-nav");
-  menuToggle?.addEventListener("click", () => {
-    const open = menuToggle.getAttribute("aria-expanded") !== "true";
-    menuToggle.setAttribute("aria-expanded", String(open));
-    menuToggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
-    navigation?.classList.toggle("is-open", open);
-  });
-  navigation?.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", () => {
-      navigation.classList.remove("is-open");
-      menuToggle?.setAttribute("aria-expanded", "false");
-      menuToggle?.setAttribute("aria-label", "Open navigation");
-    });
-  });
+  document.documentElement.classList.remove("no-js");
+  document.documentElement.classList.add("js");
 
   const search = document.querySelector("#service-search");
   const clearSearch = document.querySelector(".clear-search");
-  const categorySelect = document.querySelector("#category-filter");
+  const categoryButtons = [...document.querySelectorAll("[data-category]")];
   const featuredToggle = document.querySelector("[data-featured-filter]");
   const cards = [...document.querySelectorAll("[data-service-card]")];
+  const sections = [...document.querySelectorAll(".service-section")];
   const noResults = document.querySelector("#no-results");
-  const typeButtons = [...document.querySelectorAll("[data-type-filter]")];
-  let activeType = "all";
-  let featuredOnly = false;
+  const typeTabs = [...document.querySelectorAll("[data-type-filter]")];
+  let activeType = "website";
   let activeCategory = "";
+  let featuredOnly = false;
 
   function applyFilters() {
     const query = (search?.value || "").trim().toLocaleLowerCase();
-    let visibleTotal = 0;
-    const visibleByType = { website: 0, api: 0 };
+    let visibleCount = 0;
+    const categoryCounts = new Map();
+    const countsByType = { website: 0, api: 0 };
+
     cards.forEach((card) => {
-      const matches = (!query || (card.dataset.search || "").toLocaleLowerCase().includes(query))
-        && (activeType === "all" || card.dataset.type === activeType)
-        && (!activeCategory || card.dataset.category === activeCategory)
-        && (!featuredOnly || card.dataset.featured === "true");
+      const text = (card.dataset.search || "").toLocaleLowerCase();
+      const matchesQuery = !query || text.includes(query);
+      const matchesCategory = !activeCategory || card.dataset.category === activeCategory;
+      const matchesFeatured = !featuredOnly || card.dataset.featured === "true";
+      const matches = card.dataset.type === activeType && matchesQuery && matchesCategory && matchesFeatured;
       card.hidden = !matches;
-      if (matches && !card.closest(".featured-section")) {
-        visibleTotal += 1;
-        visibleByType[card.dataset.type] += 1;
+
+      if (card.dataset.type === activeType && matchesQuery && matchesFeatured) {
+        const category = card.dataset.category;
+        if (category) categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+      }
+      if (matches) {
+        visibleCount += 1;
+        countsByType[activeType] += 1;
       }
     });
+
+    sections.forEach((section) => {
+      section.hidden = section.id !== (activeType === "website" ? "websites" : "apis");
+    });
     document.querySelectorAll("[data-visible-count]").forEach((count) => {
-      count.textContent = String(visibleByType[count.dataset.visibleCount] || 0);
+      count.textContent = String(countsByType[count.closest(".service-section")?.id === "websites" ? "website" : "api"] || 0);
     });
-    const featuredCount = document.querySelector("[data-featured-count]");
-    if (featuredCount) {
-      featuredCount.textContent = String(document.querySelectorAll(".featured-section [data-service-card]:not([hidden])").length);
-    }
-    document.querySelectorAll(".directory-section[id='websites'], .directory-section[id='apis']").forEach((section) => {
-      const type = section.id === "websites" ? "website" : "api";
-      section.hidden = activeType !== "all" && activeType !== type;
+    categoryButtons.forEach((button) => {
+      const category = button.dataset.category || "";
+      button.hidden = Boolean(category) && !categoryCounts.has(category);
+      button.classList.toggle("is-selected", category === activeCategory);
     });
-    const featuredSection = document.querySelector(".featured-section");
-    if (featuredSection) {
-      featuredSection.hidden = !featuredSection.querySelector("[data-service-card]:not([hidden])");
-    }
-    if (noResults) noResults.hidden = visibleTotal !== 0;
+    if (noResults) noResults.hidden = visibleCount > 0 || cards.every((card) => card.dataset.type !== activeType);
     if (clearSearch) clearSearch.hidden = !search?.value;
   }
 
@@ -99,31 +61,26 @@
     search?.focus();
     applyFilters();
   });
-  categorySelect?.addEventListener("change", () => {
-    activeCategory = categorySelect.value;
-    document.querySelectorAll(".category-chip[data-category]").forEach((chip) => {
-      chip.classList.toggle("is-selected", chip.dataset.category === activeCategory);
-    });
-    applyFilters();
-  });
-  document.querySelectorAll("button[data-category]").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      activeCategory = activeCategory === chip.dataset.category ? "" : chip.dataset.category;
-      if (categorySelect) categorySelect.value = activeCategory;
-      document.querySelectorAll(".category-chip[data-category]").forEach((item) => {
-        item.classList.toggle("is-selected", item.dataset.category === activeCategory);
-      });
+  categoryButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      activeCategory = button.dataset.category || "";
       applyFilters();
     });
   });
-  typeButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      activeType = button.dataset.typeFilter || "all";
-      typeButtons.forEach((item) => {
-        const selected = item === button;
+  typeTabs.forEach((tab) => {
+    tab.addEventListener("click", (event) => {
+      event.preventDefault();
+      activeType = tab.dataset.typeFilter || "website";
+      typeTabs.forEach((item) => {
+        const selected = item === tab;
         item.classList.toggle("is-active", selected);
-        item.setAttribute("aria-pressed", String(selected));
+        if (selected) item.setAttribute("aria-current", "page");
+        else item.removeAttribute("aria-current");
       });
+      activeCategory = "";
+      featuredOnly = false;
+      featuredToggle?.setAttribute("aria-pressed", "false");
+      history.replaceState(null, "", `#${activeType === "website" ? "websites" : "apis"}`);
       applyFilters();
     });
   });
@@ -135,20 +92,14 @@
   document.querySelectorAll("[data-reset-filters]").forEach((button) => {
     button.addEventListener("click", () => {
       if (search) search.value = "";
-      if (categorySelect) categorySelect.value = "";
       activeCategory = "";
-      activeType = "all";
       featuredOnly = false;
       featuredToggle?.setAttribute("aria-pressed", "false");
-      typeButtons.forEach((item) => {
-        const selected = item.dataset.typeFilter === "all";
-        item.classList.toggle("is-active", selected);
-        item.setAttribute("aria-pressed", String(selected));
-      });
-      document.querySelectorAll(".category-chip[data-category]").forEach((item) => item.classList.remove("is-selected"));
       applyFilters();
+      search?.focus();
     });
   });
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "/" && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName || "")) {
       event.preventDefault();
@@ -208,5 +159,17 @@
   dialog?.addEventListener("close", () => {
     if (dialogImage) dialogImage.src = "";
   });
+
+  const initialType = window.location.hash === "#apis" ? "api" : "website";
+  const initialTab = typeTabs.find((tab) => tab.dataset.typeFilter === initialType);
+  if (initialTab) {
+    activeType = initialType;
+    typeTabs.forEach((tab) => {
+      const selected = tab === initialTab;
+      tab.classList.toggle("is-active", selected);
+      if (selected) tab.setAttribute("aria-current", "page");
+      else tab.removeAttribute("aria-current");
+    });
+  }
   applyFilters();
 })();

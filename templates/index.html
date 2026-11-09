@@ -1,101 +1,69 @@
 {{define "content"}}
-<section class="hero shell" id="home" aria-labelledby="hero-title">
-  <div class="hero-copy">
-    <p class="eyebrow"><span class="status-pulse" aria-hidden="true"></span> PERSONAL SERVER DIRECTORY</p>
-    <h1 id="hero-title">Welcome to <span>Stuserver</span></h1>
-    <p class="hero-description">Discover websites, applications and APIs hosted on my personal server.</p>
-    <div class="hero-stats" aria-label="Directory totals">
-      <div><strong>{{.TotalCount}}</strong><span>Services</span></div>
-      <div><strong>{{.WebsiteCount}}</strong><span>Websites</span></div>
-      <div><strong>{{.APICount}}</strong><span>APIs</span></div>
+<div class="directory shell" id="directory">
+  <div class="directory-heading">
+    <div>
+      <p class="eyebrow"><span class="online-dot" aria-hidden="true"></span> PUBLIC DIRECTORY</p>
+      <h1>Find a service</h1>
+      <p class="heading-description">Websites and tools hosted on Stuserver.</p>
     </div>
+    <span class="total-count">{{.TotalCount}} {{if eq .TotalCount 1}}service{{else}}services{{end}}</span>
   </div>
-  <div class="hero-mark" aria-hidden="true">
-    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-    <div class="mark-core"><span></span><span></span><span></span></div>
-    <div class="mark-label">STU<span>/</span>SERVER</div>
-  </div>
-</section>
 
-<section class="directory shell" id="directory" aria-label="Service directory">
-  <div class="directory-tools">
+  <div class="directory-controls">
     <label class="search-box">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg>
       <span class="sr-only">Search services</span>
-      <input id="service-search" type="search" placeholder="Search websites, APIs, categories..." autocomplete="off">
+      <input id="service-search" type="search" placeholder="Search by name, category, or keyword" autocomplete="off">
       <button class="clear-search" type="button" aria-label="Clear search" hidden>×</button>
       <kbd>/</kbd>
     </label>
+
+    <nav class="directory-tabs" aria-label="Service type">
+      <a class="directory-tab is-active" href="#websites" data-type-filter="website" aria-current="page">
+        Websites <span class="tab-count">{{.WebsiteCount}}</span>
+      </a>
+      <a class="directory-tab" href="#apis" data-type-filter="api">
+        APIs <span class="tab-count">{{.APICount}}</span>
+      </a>
+    </nav>
+
     <div class="filter-row">
-      <div class="filter-group" role="group" aria-label="Filter by service type">
-        <button class="filter-button is-active" type="button" data-type-filter="all" aria-pressed="true">All services</button>
-        <button class="filter-button" type="button" data-type-filter="website" aria-pressed="false">Websites</button>
-        <button class="filter-button" type="button" data-type-filter="api" aria-pressed="false">APIs</button>
+      <div class="category-chips" aria-label="Filter by category">
+        <button class="category-chip is-selected" type="button" data-category="">All categories</button>
+        {{range .Categories}}<button class="category-chip" type="button" data-category="{{.}}">{{.}}</button>{{end}}
       </div>
-      <label class="category-select-label">
-        <span class="sr-only">Filter by category</span>
-        <select id="category-filter">
-          <option value="">All categories</option>
-          {{range .Categories}}<option value="{{.}}">{{.}}</option>{{end}}
-        </select>
-      </label>
+      {{if .Featured}}
       <button class="featured-filter" type="button" aria-pressed="false" data-featured-filter>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"></path></svg>
         Featured
       </button>
-    </div>
-    <div class="category-chips" aria-label="Categories">
-      <a class="category-chip" href="#websites">Websites</a>
-      <a class="category-chip" href="#apis">APIs</a>
-      {{range .Categories}}<button class="category-chip" type="button" data-category="{{.}}">{{.}}</button>{{end}}
+      {{end}}
     </div>
   </div>
 
-  {{if .Featured}}
-  <section class="directory-section featured-section" aria-labelledby="featured-title">
+  <section class="service-section" id="websites" aria-labelledby="websites-title">
     <div class="section-heading">
-      <div><p class="eyebrow">HAND-PICKED</p><h2 id="featured-title">Featured services</h2><p class="section-description">A few things worth exploring.</p></div>
-      <span class="section-count"><span data-featured-count>{{len .Featured}}</span> featured</span>
-    </div>
-    <div class="card-grid">
-      {{range .Featured}}{{template "service-card" .}}{{end}}
-    </div>
-  </section>
-  {{end}}
-
-  <section class="directory-section" id="websites" aria-labelledby="websites-title">
-    <div class="section-heading">
-      <div><p class="eyebrow">EXPLORE</p><h2 id="websites-title">Websites</h2><p class="section-description">Sites and applications running on my server.</p></div>
-      <span class="section-count"><span data-visible-count="website">{{.WebsiteCount}}</span> {{if eq .WebsiteCount 1}}website{{else}}websites{{end}}</span>
+      <h2 id="websites-title">Websites <span class="section-count" data-visible-count="website">{{.WebsiteCount}}</span></h2>
     </div>
     {{if .Websites}}<div class="card-grid">
       {{range .Websites}}{{template "service-card" .}}{{end}}
-    </div>{{else}}<div class="empty-state"><span class="empty-icon">⌘</span><h3>No websites yet</h3><p>Hosted websites will appear here when they are added to the directory.</p></div>{{end}}
+    </div>{{else}}<div class="empty-state"><span class="empty-icon">⌘</span><h3>No websites yet</h3><p>Websites will appear here when they are added to the directory.</p></div>{{end}}
   </section>
 
-  <section class="directory-section" id="apis" aria-labelledby="apis-title">
+  <section class="service-section" id="apis" aria-labelledby="apis-title">
     <div class="section-heading">
-      <div><p class="eyebrow">BUILD WITH IT</p><h2 id="apis-title">APIs</h2><p class="section-description">Services and endpoints available for developers.</p></div>
-      <span class="section-count"><span data-visible-count="api">{{.APICount}}</span> {{if eq .APICount 1}}API{{else}}APIs{{end}}</span>
+      <h2 id="apis-title">APIs <span class="section-count" data-visible-count="api">{{.APICount}}</span></h2>
     </div>
     {{if .APIs}}<div class="card-grid api-grid">
       {{range .APIs}}{{template "service-card" .}}{{end}}
-    </div>{{else}}<div class="empty-state"><span class="empty-icon">{ }</span><h3>No APIs yet</h3><p>Available API services will appear here with their documentation links.</p></div>{{end}}
+    </div>{{else}}<div class="empty-state"><span class="empty-icon">{ }</span><h3>No APIs yet</h3><p>Available APIs will appear here with their documentation.</p></div>{{end}}
   </section>
 
   <div class="no-results" id="no-results" hidden>
-    <span class="empty-icon">⌕</span><h3>No matching services</h3><p>Try a different search term or clear your filters.</p>
+    <span class="empty-icon">⌕</span><h3>No matching services</h3><p>Try another search or clear the filters.</p>
     <button class="button button-secondary" type="button" data-reset-filters>Clear filters</button>
   </div>
-</section>
-
-<section class="about-section" id="about">
-  <div class="shell about-inner">
-    <div class="about-icon" aria-hidden="true"><span></span><span></span><span></span></div>
-    <div><p class="eyebrow">ABOUT STUSERVER</p><h2>A small home for useful things.</h2><p>Stuserver is a personal hosting environment for websites, applications and APIs. This directory is a simple, read-only window into the services running here.</p></div>
-    <a class="text-link" href="#home">Back to top <span aria-hidden="true">↑</span></a>
-  </div>
-</section>
+</div>
 
 <dialog class="preview-dialog" id="preview-dialog" aria-labelledby="preview-title">
   <button class="dialog-close" type="button" aria-label="Close preview">×</button>
